@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supply Chain & Logistics SLA Dashboard - Power BI Report Preview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #090d16; color: #f1f5f9; }
+    .card-dark { background-color: #111827; border: 1px solid #1f2937; border-radius: 12px; }
+    .active-pill { background-color: #06b6d4 !important; color: #000000 !important; font-weight: 700; }
+  </style>
+</head>
+<body class="p-4 md:p-6 min-h-screen">
+
+  <!-- Top Navigation & Header -->
+  <header class="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-gray-800 gap-4">
+    <div class="flex items-center gap-3">
+      <div class="bg-cyan-500 px-3.5 py-2 rounded-xl text-black font-extrabold text-xl shadow-lg shadow-cyan-500/20">
+        SCM
+      </div>
+      <div>
+        <h1 class="text-xl md:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+          Supply Chain & Logistics SLA Monitoring
+          <span class="text-xs bg-cyan-500/20 text-cyan-400 font-semibold px-2 py-0.5 rounded-full border border-cyan-500/30">Power BI Desktop Report</span>
+        </h1>
+        <p class="text-xs md:text-sm text-gray-400">Author: Vani Thummalagunti | Developed in Microsoft Power BI</p>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="flex items-center gap-2">
+      <button onclick="resetFilters()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs md:text-sm font-semibold rounded-lg border border-gray-700 transition">
+        Reset Slicers
+      </button>
+    </div>
+  </header>
+
+  <!-- Slicers Bar -->
+  <section class="mt-6 p-4 card-dark flex flex-wrap items-center justify-between gap-4">
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider mr-1">Carrier:</span>
+      <button onclick="setFilter('carrier', 'All')" class="carrier-pill active-pill px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-800 text-gray-300">All Carriers</button>
+      <button onclick="setFilter('carrier', 'FedEx')" class="carrier-pill px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-800 text-gray-300">FedEx</button>
+      <button onclick="setFilter('carrier', 'DHL')" class="carrier-pill px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-800 text-gray-300">DHL Express</button>
+      <button onclick="setFilter('carrier', 'UPS')" class="carrier-pill px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-800 text-gray-300">UPS</button>
+      <button onclick="setFilter('carrier', 'BlueDart')" class="carrier-pill px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-800 text-gray-300">BlueDart</button>
+      <button onclick="setFilter('carrier', 'Delhivery')" class="carrier-pill px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-800 text-gray-300">Delhivery</button>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider mr-1">Mode:</span>
+      <button onclick="setFilter('mode', 'All')" class="mode-pill active-pill px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-800 text-gray-300">All</button>
+      <button onclick="setFilter('mode', 'Express')" class="mode-pill px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-800 text-gray-300">Express Air</button>
+      <button onclick="setFilter('mode', 'Standard')" class="mode-pill px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-800 text-gray-300">Standard Surface</button>
+    </div>
+  </section>
+
+  <!-- KPI Ribbon -->
+  <section class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="p-4 card-dark relative overflow-hidden">
+      <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Shipments</span>
+      <div class="mt-2 flex items-baseline gap-2">
+        <span id="kpiShipments" class="text-2xl md:text-3xl font-extrabold text-white">6,000</span>
+      </div>
+      <p class="text-[11px] text-gray-500 mt-1">Orders dispatched across network</p>
+      <div class="absolute bottom-0 left-0 right-0 h-1 bg-cyan-500"></div>
+    </div>
+
+    <div class="p-4 card-dark relative overflow-hidden">
+      <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">OTIF Fulfillment Rate</span>
+      <div class="mt-2 flex items-baseline gap-2">
+        <span id="kpiOTIF" class="text-2xl md:text-3xl font-extrabold text-emerald-400">80.4%</span>
+        <span class="text-xs text-emerald-400 font-semibold">4,825 On-Time</span>
+      </div>
+      <p class="text-[11px] text-gray-500 mt-1">Delivered within SLA commitment</p>
+      <div class="absolute bottom-0 left-0 right-0 h-1 bg-emerald-500"></div>
+    </div>
+
+    <div class="p-4 card-dark relative overflow-hidden">
+      <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Delayed Shipments</span>
+      <div class="mt-2 flex items-baseline gap-2">
+        <span id="kpiDelayed" class="text-2xl md:text-3xl font-extrabold text-orange-400">1,175</span>
+        <span class="text-xs text-orange-400 font-bold">(19.6%)</span>
+      </div>
+      <p class="text-[11px] text-gray-500 mt-1">Customer SLA violations</p>
+      <div class="absolute bottom-0 left-0 right-0 h-1 bg-orange-500"></div>
+    </div>
+
+    <div class="p-4 card-dark relative overflow-hidden">
+      <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Freight Cost</span>
+      <div class="mt-2 flex items-baseline gap-2">
+        <span id="kpiCost" class="text-2xl md:text-3xl font-extrabold text-white">$440.4K</span>
+      </div>
+      <p class="text-[11px] text-gray-500 mt-1">Avg $73.40 per consignment</p>
+      <div class="absolute bottom-0 left-0 right-0 h-1 bg-blue-500"></div>
+    </div>
+  </section>
+
+  <!-- Charts Grid -->
+  <main class="mt-6 grid grid-cols-1 md:grid-cols-12 gap-6">
+    <div class="md:col-span-7 p-5 card-dark">
+      <div class="flex items-center justify-between pb-2 border-b border-gray-800">
+        <h2 class="text-sm font-bold text-white uppercase tracking-wider">🚚 Carrier SLA On-Time Performance</h2>
+        <span class="text-xs text-cyan-400">BlueDart Leads (81.4% OTIF)</span>
+      </div>
+      <p class="text-xs text-gray-400 mt-1">On-Time vs Delayed consignments by carrier fleet</p>
+      <div class="mt-4 h-64">
+        <canvas id="carrierChart"></canvas>
+      </div>
+    </div>
+
+    <div class="md:col-span-5 p-5 card-dark flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between pb-2 border-b border-gray-800">
+          <h2 class="text-sm font-bold text-white uppercase tracking-wider">🛑 Delay Root Causes</h2>
+          <span class="text-xs text-orange-400 font-semibold">1,175 Delayed Orders</span>
+        </div>
+        <p class="text-xs text-gray-400 mt-1">Top operational bottlenecks driving SLA breaches</p>
+      </div>
+      <div class="relative my-4 h-56 flex items-center justify-center">
+        <canvas id="delayCausesDonut"></canvas>
+      </div>
+      <div class="text-[11px] text-gray-400 bg-gray-800/40 p-2.5 rounded">
+        <strong>DAX Metric Insight:</strong> Transit sorting hubs account for 25.1% of delays. Hub optimization can recover 3% in OTIF.
+      </div>
+    </div>
+
+    <div class="md:col-span-12 p-5 card-dark">
+      <div class="flex items-center justify-between pb-2 border-b border-gray-800">
+        <h2 class="text-sm font-bold text-white uppercase tracking-wider">🏭 Warehouse Origin Performance & Freight Spend</h2>
+        <span class="text-xs text-gray-400">Delhi, Mumbai, Bangalore, Kolkata</span>
+      </div>
+      <div class="mt-4 h-56">
+        <canvas id="warehouseChart"></canvas>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const data = {
+      total: 6000,
+      otif: 4825,
+      delayed: 1175,
+      cost: 440406.05,
+      carriers: {
+        'BlueDart': { onTime: 990, delayed: 226, rate: 81.4 },
+        'Delhivery': { onTime: 971, delayed: 227, rate: 81.1 },
+        'FedEx': { onTime: 968, delayed: 231, rate: 80.7 },
+        'DHL Express': { onTime: 931, delayed: 236, rate: 79.8 },
+        'UPS': { onTime: 965, delayed: 255, rate: 79.1 }
+      },
+      reasons: {
+        'Customs / Regulatory': 302,
+        'Hub Bottleneck': 295,
+        'Weather Disruption': 290,
+        'Carrier Mechanical': 288
+      },
+      warehouses: {
+        'WH-North (Delhi)': { shipments: 1540, cost: 112000 },
+        'WH-West (Mumbai)': { shipments: 1510, cost: 110500 },
+        'WH-South (Bangalore)': { shipments: 1490, cost: 109800 },
+        'WH-East (Kolkata)': { shipments: 1460, cost: 108106 }
+      }
+    };
+
+    let carrierChart, delayChart, whChart;
+
+    function init() {
+      carrierChart = new Chart(document.getElementById('carrierChart'), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(data.carriers),
+          datasets: [
+            { label: 'On-Time', data: Object.values(data.carriers).map(c => c.onTime), backgroundColor: '#10b981', borderRadius: 4 },
+            { label: 'Delayed', data: Object.values(data.carriers).map(c => c.delayed), backgroundColor: '#f97316', borderRadius: 4 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { stacked: true, ticks: { color: '#e5e7eb', font: { weight: '600' } } },
+            y: { stacked: true, grid: { color: '#1f2937' }, ticks: { color: '#9ca3af' } }
+          },
+          plugins: { legend: { labels: { color: '#d1d5db' } } }
+        }
+      });
+
+      delayChart = new Chart(document.getElementById('delayCausesDonut'), {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(data.reasons),
+          datasets: [{
+            data: Object.values(data.reasons),
+            backgroundColor: ['#f97316', '#06b6d4', '#8b5cf6', '#ef4444'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '68%',
+          plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1', font: { size: 11 } } } }
+        }
+      });
+
+      whChart = new Chart(document.getElementById('warehouseChart'), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(data.warehouses),
+          datasets: [
+            { label: 'Volume (Shipments)', data: Object.values(data.warehouses).map(w => w.shipments), backgroundColor: '#06b6d4', borderRadius: 6 },
+            { label: 'Freight Spend ($)', data: Object.values(data.warehouses).map(w => w.cost / 100), backgroundColor: '#3b82f6', borderRadius: 6 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { grid: { color: '#1f2937' }, ticks: { color: '#9ca3af' } },
+            x: { ticks: { color: '#e5e7eb', font: { weight: '600' } } }
+          },
+          plugins: { legend: { labels: { color: '#d1d5db' } } }
+        }
+      });
+    }
+
+    function setFilter(type, val) {
+      const pills = document.querySelectorAll(`.${type}-pill`);
+      pills.forEach(p => p.classList.toggle('active-pill', p.textContent.includes(val) || (val === 'All' && p.textContent.includes('All'))));
+
+      let mult = 1.0;
+      if (val === 'FedEx') mult = 0.20;
+      if (val === 'DHL') mult = 0.19;
+      if (val === 'UPS') mult = 0.20;
+      if (val === 'BlueDart') mult = 0.20;
+      if (val === 'Delhivery') mult = 0.20;
+      if (val === 'Express') mult = 0.35;
+      if (val === 'Standard') mult = 0.50;
+
+      const tot = Math.round(data.total * mult);
+      const del = Math.round(data.delayed * mult);
+      document.getElementById('kpiShipments').innerText = tot.toLocaleString();
+      document.getElementById('kpiDelayed').innerText = del.toLocaleString();
+      document.getElementById('kpiCost').innerText = '$' + ((data.cost * mult) / 1000).toFixed(1) + 'K';
+    }
+
+    function resetFilters() { setFilter('carrier', 'All'); setFilter('mode', 'All'); }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
