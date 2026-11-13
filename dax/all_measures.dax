@@ -1,0 +1,54 @@
+// =================================================================================
+// SUPPLY CHAIN & LOGISTICS SLA MONITORING - DAX MEASURES
+// Table: _Measures
+// =================================================================================
+
+// Total Shipments Processed
+Total Shipments = COUNTROWS(Fact_Shipments)
+
+// On-Time In-Full (OTIF) Shipments
+On-Time Shipments = 
+CALCULATE(
+    COUNTROWS(Fact_Shipments),
+    Fact_Shipments[IsDelayed] = "No"
+)
+
+// Delayed Shipments (SLA Breaches)
+Delayed Shipments = 
+CALCULATE(
+    COUNTROWS(Fact_Shipments),
+    Fact_Shipments[IsDelayed] = "Yes"
+)
+
+// On-Time Delivery Rate (OTIF %)
+OTIF Rate % = DIVIDE([On-Time Shipments], [Total Shipments], 0)
+
+// Delay Rate %
+Delay Rate % = DIVIDE([Delayed Shipments], [Total Shipments], 0)
+
+// Average Actual Lead Time (Days)
+Avg Actual Lead Time = AVERAGE(Fact_Shipments[ActualDays])
+
+// Average Promised Lead Time (Days)
+Avg Promised Lead Time = AVERAGE(Fact_Shipments[PromisedDays])
+
+// Average Delay Variance (Days late when delayed)
+Avg Delay Variance = 
+CALCULATE(
+    AVERAGE(Fact_Shipments[DelayDays]),
+    Fact_Shipments[IsDelayed] = "Yes"
+)
+
+// Total Freight Spend
+Total Freight Cost = SUM(Fact_Shipments[ShippingCost])
+
+// Average Cost per Shipment
+Avg Cost Per Shipment = DIVIDE([Total Freight Cost], [Total Shipments], 0)
+
+// Dynamic Header
+Dynamic Logistics Title = 
+IF(
+    ISFILTERED(Dim_Carrier[Carrier]),
+    "Carrier Performance: " & SELECTEDVALUE(Dim_Carrier[Carrier]),
+    "Global Supply Chain Fulfillment & SLA Scorecard"
+)
